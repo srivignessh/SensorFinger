@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<title>Accelerometer Javascript Test</title>
+<meta name="viewport" content="width=device-width,user-scalable=yes" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+
+</head>
+
+<body>
+<div id="content">
+    <h6>Accelerometer Javascript Test</h6>
+    <form>
+  <input type="text" id="uid" name="uid">
+  <button type="button" onclick="sense()">Sense</button>
+  </form>
+<ul>
+	<li> Off: <span id="Off"></span></li>
+	<li> Max: <span id="Max"></span></li>
+	<li> Min: <span id="Min"></span></li>
+	<li> aV: <span id="aV"></span>g</li>
+	<li> x: <span id="aX"></span>g</li>
+	<li> y: <span id="aY"></span>g</li>
+	<li> z: <span id="aZ"></span>g</li>
+	
+
+</div>
+<div id="txtSend"><b>Send info </b></div>
+<div id="txtCalb"><b>Calb info </b></div>
+<button onclick="upload()">upload</button>
+
+<script type="text/javascript">
+function sender(uid,vid,pos,aT)
+{
+ 		if (aT == null) {
+	        document.getElementById("txtHint").innerHTML = "";
+	        return;
+	    } else {
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "push",
+        data:{
+                 uid: uid,
+                 vid : vid,
+                 pos: pos,
+                 X: aT[0],
+                 Y:aT[1],
+                 Z:aT[2]
+        },
+        success: function( data ) 
+        {
+            
+            $( '#txtSend' ).html(data);
+        }
+     });
+	       
+	    }
+}
+function calibrator(uid,vpq,pos,Sz,Oz)
+{
+ 		if (vpq == null) {
+	        document.getElementById("txtHint").innerHTML = "";
+	        return;
+	    } else {
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "calib",
+        data:{
+                 uid: uid,
+                 vpq : vpq,
+                 pos: pos,
+                 Sz:Sz,
+                 Oz:Oz
+        },
+        success: function( data ) 
+        {
+            
+            $( '#txtCalb' ).html(data);
+        }
+     });
+	        
+	    }
+}
+function updater() {
+	uid = document.getElementById("uid").value;
+	var aV=[aX,aY,aZ];
+	if(aMax[0] < aX)
+		{aMax[0]=aX;}
+	if(aMax[1]<aY)
+		{aMax[1]=aY;}
+	if(aMax[2]<aZ)
+		{aMax[2]=aZ;}
+	if(aMin[0]>aX)
+		{aMin[0]=aX;}
+	if(aMin[1]>aY)
+		{aMin[1]=aY;}
+	if(aMin[2]>aZ)
+		{aMin[2]=aZ;}
+	
+	Off[0]=(aMax[0]+aMin[0])/2;
+	Off[1]=(aMax[1]+aMin[1])/2;
+	Off[2]=(aMax[2]+aMin[2])/2;
+	
+    document.getElementById("Off").innerHTML = Off;
+    document.getElementById("aV").innerHTML = aV;
+    document.getElementById("Max").innerHTML = aMax;
+	document.getElementById("Min").innerHTML = aMin;
+}
+
+
+Array.prototype.SumArray = function (arr) {
+    var sum = [];
+    if (arr != null && this.length == arr.length) {
+        for (var i = 0; i < arr.length; i++) {
+            sum.push(this[i] + arr[i]);
+        }
+    }
+
+    return sum;
+}
+
+var iter=0,aMax=[-20,-20,-20],aMin=[20,20,20],aX=0,aY=0,aZ=0,vidp=0,vidq=0,pos=0,itp=0,itq=0,Itid=0,Off=[0,0,0];
+var aTp=[0,0,0],aTq=[0,0,0],apz=0,aqz=0,vpz=0,vqz=0,pq=0,fp=1,fq=1;
+function upload()
+{
+    //setInterval(Updater(id,aX,aY,aZ),3000);
+    Itid = setInterval(updater, 10);
+}	
+function sense()
+{
+uid = document.getElementById("uid").value;
+if (window.DeviceMotionEvent != undefined && uid) {
+	window.ondevicemotion = function(e) {
+		aX= e.accelerationIncludingGravity.x;
+		aY= e.accelerationIncludingGravity.y;
+		aZ= e.accelerationIncludingGravity.z;
+		document.getElementById("aX").innerHTML = aX;
+		document.getElementById("aY").innerHTML = aY;
+		document.getElementById("aZ").innerHTML = aZ;
+		}
+	
+} 
+}
+
+</script>
+</body>
+</html>

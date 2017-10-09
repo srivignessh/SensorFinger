@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<title>Sensor Fingerprint</title>
+<meta name="viewport" content="width=device-width,user-scalable=yes" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+{% load static %}
+<link rel="stylesheet" href="{% static "master.css" %}">
+</head>
+
+<body>
+<div id="content">
+    <h2>Sensor Fingerprint Test</h2>
+    <form id="sensor">
+   <h4>Enter a Device ID to Track <br>
+  <input type="text" id="uid" name="uid"> </h4> 
+  <button class="button" type="button" onclick="sense()">Click to Capture Reading</button>
+  </form>
+<h4>
+<ul>
+
+	<li> X: <span id="aX"></span>g</li>
+	<li> Y: <span id="aY"></span>g</li>
+	<li> Z: <span id="aZ"></span>g</li>
+</ul>
+	<button class="button" onclick="upload()">Click to Begin Upload</button>
+<ul>
+	<li> Capture Status: <span id="a"></span></li>
+</ul>
+
+	<button class="button" onclick="calibrator()">Click to Calibrate</button>
+<h4>
+</div>
+
+<div id="txtSend">Upload Status</div>
+
+<div id="txtCalb">Calibration Status
+<ul>
+
+	<li> Sx: <span class="sx"> </span></li>
+	<li> Sy: <span class="sy"> </span></li>
+	<li> Sz: <span class="sz"> </span></li>
+	<li> Ox: <span class="ox"> </span></li>
+	<li> Oy: <span class="oy"> </span></li>
+	<li> Oz: <span class="oz"> </span></li>
+
+</ul>
+</div>
+
+<button class="button" type="button" onclick="saveit()">Save Calibration</button>
+
+<div id="txtSave">Save Status</div>
+
+<button class="button" type="button" onclick="classifier()">Classfier</button>
+
+<div id="txtClfy">Classify Status</div>
+
+<script type="text/javascript">
+var wid=Math.floor(Math.random()*10000)
+function sender(uid,aT)
+{
+ 		if (aT == null) {
+	        document.getElementById("a").innerHTML = "Not Supported";
+	        return;
+	    } else {
+	    	document.getElementById("a").innerHTML = "Recording";
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/arbit",
+        data:{
+                 uid: uid,
+                 vid : wid,
+                 X: aT[0],
+                 Y: aT[1],
+                 Z: aT[2]
+        },
+        success: function( data ) 
+        {	
+            
+            $( '#txtSend' ).html(data);
+        }
+     });
+	       
+	    }
+}
+function saveit()
+{
+ 		
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/saveit",
+        data:{
+                 vid : wid
+        },
+        success: function( data ) 
+        {	
+            
+            $( '#txtSave' ).html(data);
+        }
+     });
+}
+function classifier()
+{		
+	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/classify",
+        data:{
+                 vid : wid
+        },
+        success: function( data ) 
+        {	
+        	$( '#txtClfy' ).html(data);
+        }
+     });
+
+}
+function calibrator()
+{	clearInterval(Itid);
+ 		
+	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/calibrat",
+        data:{
+                 vid : wid
+        },
+        success: function( data ) 
+        {	document.getElementById("a").innerHTML = "Paused";
+        	$( '#txtSend' ).html("Stopped");
+            $('.sx').html(data['Sx'])
+            $('.sy').html(data['Sy'])
+            $('.sz').html(data['Sz'])
+            $('.ox').html(data['Ox'])
+            $('.oy').html(data['Oy'])
+            $('.oz').html(data['Oz'])
+        }
+     });
+}
+function clear()
+{		clearInterval(Itid);
+	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/dele",
+        data:{
+                 vid : wid
+        },
+        success: function( data ) 
+        {	document.getElementById("a").innerHTML = "Paused";
+        	$( '#txtSend' ).html("Stopped");
+            $('.sx').html(data['Sx'])
+            $('.sy').html(data['Sy'])
+            $('.sz').html(data['Sz'])
+            $('.ox').html(data['Ox'])
+            $('.oy').html(data['Oy'])
+            $('.oz').html(data['Oz'])
+        }
+     });
+	        
+	    
+}
+function updater() {
+	
+	var aV=[aX,aY,aZ];
+    
+	if ((Math.abs(aX)<11) && (Math.abs(aY)<11) && (Math.abs(aY)<11))
+	{		
+	    	aT = aT.SumArray(aV);It=It+1;
+	}
+		if(It>=20)
+		{	aT=aT.map(function(x){return x/20});
+			sender(uid,aT);	
+	    	aT=[0,0,0];
+	    	It=0;
+		}	
+
+
+	}
+
+
+function upload()
+{
+    //setInterval(Updater(id,aX,aY,aZ),3000);
+    Itid = setInterval(updater, 10);
+}
+
+Array.prototype.SumArray = function (arr) {
+    var sum = [];
+    if (arr != null && this.length == arr.length) {
+        for (var i = 0; i < arr.length; i++) {
+            sum.push(this[i] + arr[i]);
+        }
+    }
+
+    return sum;
+}
+
+var Itid=0,It=0;aT=[0,0,0];
+function sense()
+{
+uid = document.getElementById("uid").value;
+if (window.DeviceMotionEvent != undefined && uid) {
+	window.ondevicemotion = function(e) {
+		aX= e.accelerationIncludingGravity.x;
+		aY= e.accelerationIncludingGravity.y;
+		aZ= e.accelerationIncludingGravity.z;
+		document.getElementById("aX").innerHTML = aX;
+		document.getElementById("aY").innerHTML = aY;
+		document.getElementById("aZ").innerHTML = aZ;
+		}
+	
+} 
+}
+
+</script>
+</body>
+</html>

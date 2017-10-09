@@ -1,0 +1,78 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="40"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+  <!--<div id="txtHint"><b>info </b></div> -->
+  <div id="myDiv" style="width: 1800px; height: 900px;"><!-- Plotly chart will be drawn inside this DIV --></div>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.2.1/math.min.js"></script>
+  <script>
+  $.ajax(
+    {
+        type:"GET",
+        url: "value",
+        data:{},
+        success: function( data ) 
+        {
+           			var value = data;
+	                var dat=[];
+	                var val=0,trace=0,px=[],py=[],ptext=[];
+	                var nuid=value[0]['uid']
+	                for (i=0; i < value.length; i++)
+	                {    
+	            	console.log(value[i]);
+	            		 if(nuid==value[i]['uid'])
+	            		 {	
+	            		 px.push(value[i]['Sz'])
+	            		 py.push(value[i]['Oz'])
+	                	 ptext.push(value[i]['vid'])
+					     }					
+	                
+	                     if(value[i+1] && nuid != value[i+1]['uid'])
+	                	{      trace = {
+  								x: px,
+ 							 	y: py,
+  								mode: 'markers',
+  								type: 'scatter',
+  								name: nuid,
+                  text:ptext  ,
+  								marker: { size: 12 }
+								};
+								px=[],py=[],ptext=[];
+								if(i+1<value.length)
+								{nuid=value[i+1]['uid'];}
+								
+	                            dat.push(trace);
+	                }
+}
+	                trace = {
+  								x: px,
+ 							 	y: py,
+  								mode: 'markers',
+  								type: 'scatter',
+  								name: "new",
+  								text: ptext,
+  								marker: { size: 12 }
+								};
+					dat.push(trace);			
+	                plot(dat);
+        
+    }
+     });
+  
+ function plot(data)
+  {
+  
+var layout = { 
+  xaxis: {title: 'Senstivity',},
+  yaxis: { title: 'Offset',},
+  title:'Accelerometer Fingerprint'
+  };
+
+ Plotly.newPlot('myDiv', data, layout);
+ }</script>
+ </body>
+ 

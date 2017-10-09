@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<title>Sensor Fingerprint</title>
+<meta name="viewport" content="width=device-width,user-scalable=yes" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+{% load static %}
+<link rel="stylesheet" href="{% static "master.css" %}">
+</head>
+
+<body>
+<div id="content">
+    <h2>Sensor Fingerprint Test</h2>
+    <form id="sensor">
+   <h4>Enter a Device ID to Track <br>
+  <input type="text" id="uid" name="uid"> </h4> 
+  <button class="button" type="button" onclick="sense()">Click to Capture Reading</button>
+  </form>
+<h4>
+<ul>
+
+	<li> X: <span id="aX"></span>g</li>
+	<li> Y: <span id="aY"></span>g</li>
+	<li> Z: <span id="aZ"></span>g</li>
+</ul>
+	<button class="button" onclick="upload()">Click to Begin Upload</button>
+<ul>
+	<li> Capture Status: <span id="a"></span></li>
+	<li> Capture Position: <span id="pos"></span></li>
+	<li> Up Reading: <span id="apz"></span></li>
+	<li> Down Reading: <span id="aqz"></span></li>
+	<li> Up Status: <span id="vp"></span></li>
+	<li> Down Status: <span id="vq"></span></li>
+	<li> Sensitivity: <span id="Sz"></span></li>
+	<li> Offset: <span id="Oz"></span></li>
+</ul>
+	
+<h4>
+</div>
+<div id="txtSend">Upload Status</div>
+<div id="txtCalb">Calibration Status</div>
+<button class="button" type="button" onclick="location.href='/accelo/plot'"">View Fingerprint</button>
+
+
+<script type="text/javascript">
+var wid=Math.floor(Math.random()*10000)
+function sender(uid,vid,pos,aT)
+{
+ 		if (aT == null) {
+	        document.getElementById("a").innerHTML = "Not Supported";
+	        return;
+	    } else {
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/push",
+        data:{
+                 uid: uid,
+                 vid : wid,
+                 pos: pos,
+                 X: aT[0],
+                 Y:aT[1],
+                 Z:aT[2]
+        },
+        success: function( data ) 
+        {
+            
+            $( '#txtSend' ).html(data);
+        }
+     });
+	       
+	    }
+}
+function calibrator(uid,vpq,pos,Sz,Oz)
+{
+ 		if (vpq == null) {
+	        document.getElementById("a").innerHTML = "Not Supported";
+	        return;
+	    } else {
+	    	$.ajax(
+    {
+        type:"GET",
+        url: "/accelo/calib",
+        data:{
+                 uid: uid,
+                 vpq : wid,
+                 pos: pos,
+                 Sz:Sz,
+                 Oz:Oz
+        },
+        success: function( data ) 
+        {
+            
+            $( '#txtCalb' ).html(data);
+        }
+     });
+	        
+	    }
+}
+function updater() {
+	uid = document.getElementById("uid").value;
+	var aV=[aX,aY,aZ];
+	if ((Math.abs(aX)<0.7) && (Math.abs(aY)<0.7))
+	{		
+	    	if(aZ<-9.2){pos=1;aTp = aTp.SumArray(aV);vidp=vidp+1;itp=itp+1;}
+	    	else if(aZ>9.7){	pos=-1;aTq = aTq.SumArray(aV);vidq=vidq+1;itq=itq+1;}		
+			document.getElementById("pos").innerHTML= pos;		
+		
+		if(itp>=20 && fp)
+		{	aTp=aTp.map(function(x){return x/20});
+			vpz=vidp/20;
+			apz=aTp[2];
+			document.getElementById("vp").innerHTML=vpz;
+			document.getElementById("a").innerHTML=true;
+			document.getElementById("apz").innerHTML=apz;
+	    	if(vpz==5){sender(uid,vpz,pos,aTp); fp=0;document.getElementById("a").innerHTML="p update";}
+	    	aTp=[0,0,0];
+	    	itp=0;
+		}
+
+		if(itq>=20 && fq)	
+		{	aTq=aTq.map(function(x){return x/20});
+			vqz=vidq/20;
+			aqz=aTq[2];
+			document.getElementById("a").innerHTML=true;
+			document.getElementById("vq").innerHTML=vqz;
+			document.getElementById("aqz").innerHTML=aqz;
+			if(vqz==5){sender(uid,vqz,pos,aTq);fq=0;document.getElementById("a").innerHTML="q update";}
+	   		aTq=[0,0,0];
+	    	itq=0;
+		}
+
+
+	}
+	else
+		{	document.getElementById("a").innerHTML=false;}
+	var Sz=Math.abs((apz-aqz)/(2*9.80665));
+	var Oz=Math.abs((apz+aqz)/2);
+	if(aqz && apz)
+	{   
+		document.getElementById("Sz").innerHTML= Sz;
+		document.getElementById("Oz").innerHTML= Oz;
+	}
+	if((vpz >= 5) && (vqz >= 5) )
+		{   
+		    calibrator(uid,pq,pos,Sz,Oz);
+		    clearInterval(Itid);
+	    }
+}
+function test()
+{    uid = document.getElementById("uid").value;
+	 alert("hello"+uid);
+}
+
+Array.prototype.SumArray = function (arr) {
+    var sum = [];
+    if (arr != null && this.length == arr.length) {
+        for (var i = 0; i < arr.length; i++) {
+            sum.push(this[i] + arr[i]);
+        }
+    }
+
+    return sum;
+}
+
+var iter=0,aX=0,aY=0,aZ=0,vidp=0,vidq=0,pos=0,itp=0,itq=0,Itid=0;;
+var aTp=[0,0,0],aTq=[0,0,0],apz=0,aqz=0,vpz=0,vqz=0,pq=0,fp=1,fq=1;
+function upload()
+{
+    //setInterval(Updater(id,aX,aY,aZ),3000);
+    Itid = setInterval(updater, 10);
+}	
+function sense()
+{
+uid = document.getElementById("uid").value;
+if (window.DeviceMotionEvent != undefined && uid) {
+	window.ondevicemotion = function(e) {
+		aX= e.accelerationIncludingGravity.x;
+		aY= e.accelerationIncludingGravity.y;
+		aZ= e.accelerationIncludingGravity.z;
+		document.getElementById("aX").innerHTML = aX;
+		document.getElementById("aY").innerHTML = aY;
+		document.getElementById("aZ").innerHTML = aZ;
+		}
+	
+} 
+}
+
+</script>
+</body>
+</html>

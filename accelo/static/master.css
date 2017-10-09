@@ -1,0 +1,48 @@
+body{
+	background-color:#03A9F4;
+}
+h2{
+	color:purple;
+}
+
+li{
+
+color:yellow;
+}
+
+#sensor{
+	color:white;
+}
+#Send{
+	color:green;
+}
+#Calb{
+	color:green;
+
+}
+#txtSend{
+    font-weight: bold;
+
+}
+#txtCalb{
+    font-weight: bold;
+}
+
+#txtSave{
+    font-weight: bold;
+}
+#txtClfy{
+    font-weight: bold;
+}
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 2px 1px;
+    cursor: pointer;
+}
